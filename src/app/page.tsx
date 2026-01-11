@@ -3,14 +3,28 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { BookmarkIcon, HeartIcon, StarIcon } from "lucide-react";
+
+// Shadcn UI Components
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/toggle-group";
 
 export default function Home() {
-  // 1. Manage Theme, Mounting, and Navigation State
+  // 1. Manage Theme, Mounting, Navigation, and Reaction States
   const [appState, setAppState] = useState({
     isDarkMode: false,
     mounted: false,
     isSidebarOpen: false,
     isDropdownOpen: false,
+  });
+
+  // Local state for reaction counts
+  const [reactionCounts, setReactionCounts] = useState({
+    star: 128,
+    heart: 84,
+    bookmark: 32,
   });
 
   useEffect(() => {
@@ -55,6 +69,17 @@ export default function Home() {
   const toggleDropdown = () => setAppState(prev => ({ ...prev, isDropdownOpen: !prev.isDropdownOpen }));
   const closeSidebar = () => setAppState(prev => ({ ...prev, isSidebarOpen: false, isDropdownOpen: false }));
 
+  // Handle Reaction Changes (Updates the numbers)
+  const handleReactionChange = (values: string[]) => {
+    // This logic simulates incrementing/decrementing based on toggle state
+    // In a real app, this would sync with a database (Supabase/Firebase)
+    setReactionCounts({
+      star: values.includes("star") ? 129 : 128,
+      heart: values.includes("heart") ? 85 : 84,
+      bookmark: values.includes("bookmark") ? 33 : 32,
+    });
+  };
+
   // Prevent hydration flicker
   if (!appState.mounted) {
     return <div className="min-h-screen bg-white dark:bg-black" />;
@@ -81,7 +106,6 @@ export default function Home() {
           <nav className="flex flex-col gap-6">
             <Link href="/" onClick={closeSidebar} className="text-sm font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors">Home</Link>
             
-            {/* DROPDOWN MENU */}
             <div className="flex flex-col">
               <button 
                 onClick={toggleDropdown}
@@ -93,15 +117,9 @@ export default function Home() {
               
               <div className={`overflow-hidden transition-all duration-300 ${appState.isDropdownOpen ? 'max-h-48 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
                 <ul className="flex flex-col gap-4 pl-4 border-l border-zinc-200 dark:border-zinc-800">
-                  <li>
-                    <a href="#work" onClick={closeSidebar} className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">1. Projects</a>
-                  </li>
-                  <li>
-                    <Link href="/settings" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">2. Settings</Link>
-                  </li>
-                  <li>
-                    <a href="/aj_files/Delfin_ArnelJames_Resume.pdf" target="_blank" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">3. Resume</a>
-                  </li>
+                  <li><a href="#work" onClick={closeSidebar} className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">1. Projects</a></li>
+                  <li><Link href="/settings" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">2. Settings</Link></li>
+                  <li><a href="/aj_files/Delfin_ArnelJames_Resume.pdf" target="_blank" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">3. Resume</a></li>
                 </ul>
               </div>
             </div>
@@ -109,7 +127,6 @@ export default function Home() {
             <a href="mailto:arneljamesgdelfin5@gmail.com" className="text-sm font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors">Contact</a>
           </nav>
 
-          {/* Sidebar Footer Theme Toggle */}
           <div className="mt-auto pt-8 border-t border-zinc-100 dark:border-zinc-900">
             <button onClick={toggleTheme} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
               {appState.isDarkMode ? "Switch to Light" : "Switch to Dark"}
@@ -127,7 +144,6 @@ export default function Home() {
         </div>
         
         <div className="flex items-center gap-4">
-          {/* Quick Theme Toggle Icon */}
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all"
@@ -139,7 +155,6 @@ export default function Home() {
             )}
           </button>
 
-          {/* Menu Trigger */}
           <button 
             onClick={toggleSidebar}
             className="flex items-center gap-2 p-2 rounded-lg border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-all"
@@ -167,9 +182,44 @@ export default function Home() {
             <p className="max-w-xl text-xl leading-relaxed text-zinc-600 dark:text-zinc-400 text-center lg:text-left">
               Based in General Santos City. I specialize in building web applications with <strong>Laravel</strong> and offer sideline services for <strong>PC maintenance and troubleshooting</strong>.
             </p>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
-              <a href="/aj_files/Delfin_ArnelJames_Resume.pdf" target="_blank" className="flex h-14 items-center justify-center rounded-full bg-black px-10 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 shadow-lg">View Resume</a>
-              <a href="/aj_files/Delfin_ArnelJames_AppLetter.pdf" target="_blank" className="flex h-14 items-center justify-center rounded-full border border-black px-10 text-xs font-bold uppercase tracking-widest transition-all hover:bg-black hover:text-white dark:border-white dark:hover:bg-white dark:hover:text-black">App Letter</a>
+            
+            {/* CTA Buttons and Reactions */}
+            <div className="flex flex-col gap-8 items-center lg:items-start">
+              <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
+                <a href="/aj_files/Delfin_ArnelJames_Resume.pdf" target="_blank" className="flex h-14 items-center justify-center rounded-full bg-black px-10 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 shadow-lg">View Resume</a>
+                <a href="/aj_files/Delfin_ArnelJames_AppLetter.pdf" target="_blank" className="flex h-14 items-center justify-center rounded-full border border-black px-10 text-xs font-bold uppercase tracking-widest transition-all hover:bg-black hover:text-white dark:border-white dark:hover:bg-white dark:hover:text-black">App Letter</a>
+              </div>
+
+              {/* REACTION TOGGLE GROUP WITH COUNTERS */}
+              <div className="flex flex-col gap-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 text-center lg:text-left">Community Reactions</span>
+                <ToggleGroup type="multiple" variant="outline" onValueChange={handleReactionChange} className="justify-center lg:justify-start">
+                  <ToggleGroupItem
+                    value="star"
+                    aria-label="Toggle star"
+                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-yellow-500 data-[state=on]:*:[svg]:stroke-yellow-500 transition-all border-zinc-200 dark:border-zinc-800"
+                  >
+                    <StarIcon size={16} />
+                    <span className="text-[10px] font-bold">{reactionCounts.star}</span>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="heart"
+                    aria-label="Toggle heart"
+                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-red-500 data-[state=on]:*:[svg]:stroke-red-500 transition-all border-zinc-200 dark:border-zinc-800"
+                  >
+                    <HeartIcon size={16} />
+                    <span className="text-[10px] font-bold">{reactionCounts.heart}</span>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="bookmark"
+                    aria-label="Toggle bookmark"
+                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-blue-500 data-[state=on]:*:[svg]:stroke-blue-500 transition-all border-zinc-200 dark:border-zinc-800"
+                  >
+                    <BookmarkIcon size={16} />
+                    <span className="text-[10px] font-bold">{reactionCounts.bookmark}</span>
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
             </div>
           </div>
 
