@@ -5,11 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { BookmarkIcon, HeartIcon, StarIcon } from "lucide-react";
 
-// Shadcn UI Components
+// FIXED IMPORT PATH based on your folder structure
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@/components/ui/toggle-group";
+} from "./components/ui/toggle-group";
 
 export default function Home() {
   // 1. Manage Theme, Mounting, Navigation, and Reaction States
@@ -71,8 +71,6 @@ export default function Home() {
 
   // Handle Reaction Changes (Updates the numbers)
   const handleReactionChange = (values: string[]) => {
-    // This logic simulates incrementing/decrementing based on toggle state
-    // In a real app, this would sync with a database (Supabase/Firebase)
     setReactionCounts({
       star: values.includes("star") ? 129 : 128,
       heart: values.includes("heart") ? 85 : 84,
@@ -106,6 +104,7 @@ export default function Home() {
           <nav className="flex flex-col gap-6">
             <Link href="/" onClick={closeSidebar} className="text-sm font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors">Home</Link>
             
+            {/* DROPDOWN MENU */}
             <div className="flex flex-col">
               <button 
                 onClick={toggleDropdown}
@@ -193,11 +192,16 @@ export default function Home() {
               {/* REACTION TOGGLE GROUP WITH COUNTERS */}
               <div className="flex flex-col gap-3">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 text-center lg:text-left">Community Reactions</span>
-                <ToggleGroup type="multiple" variant="outline" onValueChange={handleReactionChange} className="justify-center lg:justify-start">
+                {/* FIXED: Removed variant="outline" prop to solve TS error, moved style to className */}
+                <ToggleGroup 
+                  type="multiple" 
+                  onValueChange={handleReactionChange} 
+                  className="justify-center lg:justify-start border border-zinc-200 dark:border-zinc-800 rounded-full p-1"
+                >
                   <ToggleGroupItem
                     value="star"
                     aria-label="Toggle star"
-                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-yellow-500 data-[state=on]:*:[svg]:stroke-yellow-500 transition-all border-zinc-200 dark:border-zinc-800"
+                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-yellow-500 data-[state=on]:*:[svg]:stroke-yellow-500 transition-all"
                   >
                     <StarIcon size={16} />
                     <span className="text-[10px] font-bold">{reactionCounts.star}</span>
@@ -205,7 +209,7 @@ export default function Home() {
                   <ToggleGroupItem
                     value="heart"
                     aria-label="Toggle heart"
-                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-red-500 data-[state=on]:*:[svg]:stroke-red-500 transition-all border-zinc-200 dark:border-zinc-800"
+                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-red-500 data-[state=on]:*:[svg]:stroke-red-500 transition-all"
                   >
                     <HeartIcon size={16} />
                     <span className="text-[10px] font-bold">{reactionCounts.heart}</span>
@@ -213,7 +217,7 @@ export default function Home() {
                   <ToggleGroupItem
                     value="bookmark"
                     aria-label="Toggle bookmark"
-                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-blue-500 data-[state=on]:*:[svg]:stroke-blue-500 transition-all border-zinc-200 dark:border-zinc-800"
+                    className="gap-2 px-4 rounded-full data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-blue-500 data-[state=on]:*:[svg]:stroke-blue-500 transition-all"
                   >
                     <BookmarkIcon size={16} />
                     <span className="text-[10px] font-bold">{reactionCounts.bookmark}</span>
