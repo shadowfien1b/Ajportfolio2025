@@ -2,26 +2,31 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
+  // 1. Manage Theme, Mounting, and Navigation State
   const [appState, setAppState] = useState({
     isDarkMode: false,
     mounted: false,
-    isSidebarOpen: false, // State for Sidebar
-    isDropdownOpen: false, // State for Dropdown inside Sidebar
+    isSidebarOpen: false,
+    isDropdownOpen: false,
   });
 
   useEffect(() => {
+    // Check for theme preferences
     const savedTheme = localStorage.getItem("theme");
     const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const shouldBeDark = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
 
+    // Sync DOM with theme
     if (shouldBeDark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
 
+    // Set mounting and initial theme state
     window.requestAnimationFrame(() => {
       setAppState((prev) => ({
         ...prev,
@@ -31,9 +36,11 @@ export default function Home() {
     });
   }, []);
 
+  // Theme Toggle Logic
   const toggleTheme = () => {
     const newDarkMode = !appState.isDarkMode;
     setAppState((prev) => ({ ...prev, isDarkMode: newDarkMode }));
+    
     if (newDarkMode) {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
@@ -43,16 +50,12 @@ export default function Home() {
     }
   };
 
-  // Toggle Sidebar
-  const toggleSidebar = () => {
-    setAppState(prev => ({ ...prev, isSidebarOpen: !prev.isSidebarOpen }));
-  };
+  // Sidebar & Dropdown Toggles
+  const toggleSidebar = () => setAppState(prev => ({ ...prev, isSidebarOpen: !prev.isSidebarOpen }));
+  const toggleDropdown = () => setAppState(prev => ({ ...prev, isDropdownOpen: !prev.isDropdownOpen }));
+  const closeSidebar = () => setAppState(prev => ({ ...prev, isSidebarOpen: false, isDropdownOpen: false }));
 
-  // Toggle Dropdown
-  const toggleDropdown = () => {
-    setAppState(prev => ({ ...prev, isDropdownOpen: !prev.isDropdownOpen }));
-  };
-
+  // Prevent hydration flicker
   if (!appState.mounted) {
     return <div className="min-h-screen bg-white dark:bg-black" />;
   }
@@ -64,55 +67,69 @@ export default function Home() {
       {appState.isSidebarOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity"
-          onClick={toggleSidebar}
+          onClick={closeSidebar}
         />
       )}
 
       {/* --- SIDEBAR --- */}
       <aside className={`fixed top-0 right-0 z-50 h-full w-72 bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 transform transition-transform duration-300 ease-in-out ${appState.isSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
         <div className="flex flex-col h-full p-8">
-          <button onClick={toggleSidebar} className="self-end mb-12 text-zinc-500 hover:text-black dark:hover:text-white">
+          <button onClick={toggleSidebar} className="self-end mb-12 text-zinc-500 hover:text-black dark:hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
 
           <nav className="flex flex-col gap-6">
-            <a href="#" className="text-sm font-bold uppercase tracking-widest">Home</a>
+            <Link href="/" onClick={closeSidebar} className="text-sm font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors">Home</Link>
             
-            {/* DROPDOWN SECTION */}
+            {/* DROPDOWN MENU */}
             <div className="flex flex-col">
               <button 
                 onClick={toggleDropdown}
                 className="flex items-center justify-between text-sm font-bold uppercase tracking-widest group"
               >
-                Explore
-                <svg className={`transition-transform duration-200 ${appState.isDropdownOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                Quick Menu
+                <svg className={`transition-transform duration-300 ${appState.isDropdownOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </button>
               
-              <div className={`overflow-hidden transition-all duration-300 ${appState.isDropdownOpen ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+              <div className={`overflow-hidden transition-all duration-300 ${appState.isDropdownOpen ? 'max-h-48 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
                 <ul className="flex flex-col gap-4 pl-4 border-l border-zinc-200 dark:border-zinc-800">
-                  <li><a href="#work" onClick={toggleSidebar} className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">1. My Work</a></li>
-                  <li><a href="mailto:arneljamesgdelfin5@gmail.com" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">2. Services</a></li>
-                  <li><a href="/aj_files/Delfin_ArnelJames_Resume.pdf" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">3. Resume</a></li>
+                  <li>
+                    <a href="#work" onClick={closeSidebar} className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">1. Projects</a>
+                  </li>
+                  <li>
+                    <Link href="/settings" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">2. Settings</Link>
+                  </li>
+                  <li>
+                    <a href="/aj_files/Delfin_ArnelJames_Resume.pdf" target="_blank" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">3. Resume</a>
+                  </li>
                 </ul>
               </div>
             </div>
 
-            <a href="mailto:arneljamesgdelfin5@gmail.com" className="text-sm font-bold uppercase tracking-widest text-zinc-400">Contact</a>
+            <a href="mailto:arneljamesgdelfin5@gmail.com" className="text-sm font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors">Contact</a>
           </nav>
+
+          {/* Sidebar Footer Theme Toggle */}
+          <div className="mt-auto pt-8 border-t border-zinc-100 dark:border-zinc-900">
+            <button onClick={toggleTheme} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              {appState.isDarkMode ? "Switch to Light" : "Switch to Dark"}
+              <span className="text-lg">{appState.isDarkMode ? "☀️" : "🌙"}</span>
+            </button>
+          </div>
         </div>
       </aside>
 
-      {/* --- NAVIGATION --- */}
+      {/* --- MAIN HEADER --- */}
       <nav className="flex w-full max-w-6xl items-center justify-between px-6 py-10 md:px-10">
         <div className="flex flex-col leading-tight">
           <span className="text-sm font-bold tracking-[0.2em] uppercase">Arnel James G. Delfin</span>
           <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-zinc-400 dark:text-zinc-600">Professional Portfolio</span>
         </div>
         
-        <div className="flex items-center gap-4 md:gap-8">
+        <div className="flex items-center gap-4">
+          {/* Quick Theme Toggle Icon */}
           <button 
             onClick={toggleTheme}
-            aria-label="Toggle Theme"
             className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all"
           >
             {appState.isDarkMode ? (
@@ -122,10 +139,10 @@ export default function Home() {
             )}
           </button>
 
-          {/* SIDEBAR TRIGGER BUTTON */}
+          {/* Menu Trigger */}
           <button 
             onClick={toggleSidebar}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all"
+            className="flex items-center gap-2 p-2 rounded-lg border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-all"
           >
             <span className="hidden md:inline text-[10px] font-bold uppercase tracking-widest">Menu</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -133,7 +150,7 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* --- MAIN CONTENT (Same as before) --- */}
+      {/* --- PAGE CONTENT --- */}
       <main className="flex w-full max-w-6xl flex-col px-6 md:px-10">
         
         {/* Hero Section */}
@@ -167,7 +184,7 @@ export default function Home() {
         {/* PROJECTS SECTION */}
         <section id="work" className="flex flex-col gap-32 py-24 border-t border-zinc-100 dark:border-zinc-900">
           
-          {/* 1. Thesis Project: Blaan Language */}
+          {/* 1. Thesis Project */}
           <div className="flex flex-col gap-10">
             <div className="flex flex-col gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Featured Thesis Project</span>
@@ -175,30 +192,20 @@ export default function Home() {
             </div>
             
             <div className="group relative overflow-hidden rounded-3xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl">
-              
               <a href="https://blaanlanguage.com" target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-20 hidden lg:flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
                 <span className="rounded-full bg-white px-8 py-3 text-xs font-bold uppercase tracking-widest text-black">Visit Live Site</span>
               </a>
-
               <a href="https://blaanlanguage.com" target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-20 lg:hidden flex items-center justify-center bg-black/20">
-                <span className="text-white text-[10px] font-bold uppercase tracking-[0.2em] border border-white/50 px-6 py-3 rounded-full backdrop-blur-[2px]">
-                  Open Live Website →
-                </span>
+                <span className="text-white text-[10px] font-bold uppercase tracking-[0.2em] border border-white/50 px-6 py-3 rounded-full backdrop-blur-[2px]">Open Live Website →</span>
               </a>
-
               <div className="aspect-video w-full relative">
-                <Image
-                  src="/blaanlanguange.com.jpg"
-                  alt="Blaan Language Website"
-                  fill
-                  className="object-cover object-top transition-all duration-1000 lg:grayscale lg:group-hover:grayscale-0 lg:group-hover:scale-105"
-                />
+                <Image src="/blaanlanguange.com.jpg" alt="Blaan Language Website" fill className="object-cover object-top transition-all duration-1000 lg:grayscale lg:group-hover:grayscale-0 lg:group-hover:scale-105" />
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
               <p className="text-lg text-zinc-600 dark:text-zinc-400">
-                A gamified learning platform dedicated to B&apos;laan language preservation, utilizing <strong>AI and NLP</strong> to provide interactive vocabulary challenges and reward-based milestones.
+                A gamified learning platform dedicated to B&apos;laan language preservation, utilizing <strong>AI and NLP</strong> to provide interactive vocabulary challenges.
               </p>
               <div className="flex flex-wrap gap-2 content-start">
                 {['Laravel', 'AI/NLP', 'Gamification', 'MySQL'].map((t) => (
@@ -208,7 +215,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 2. Laravel System: Escape to LaagGensan */}
+          {/* 2. Escape to LaagGensan */}
           <div className="flex flex-col gap-10">
             <div className="flex flex-col gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Booking Management System</span>
@@ -224,7 +231,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* 3. Game Dev: GhostTownExploration */}
+          {/* 3. GhostTownExploration */}
           <div className="flex flex-col gap-10">
             <div className="flex flex-col gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Game Development (Unity)</span>
