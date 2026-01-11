@@ -4,46 +4,36 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function Home() {
-  // 1. Single state object to manage both theme and mounting status
   const [appState, setAppState] = useState({
     isDarkMode: false,
     mounted: false,
+    isSidebarOpen: false, // State for Sidebar
+    isDropdownOpen: false, // State for Dropdown inside Sidebar
   });
 
   useEffect(() => {
-    // Perform side-effect calculations
     const savedTheme = localStorage.getItem("theme");
     const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const shouldBeDark = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
 
-    // Apply the class to the document immediately (DOM manipulation)
     if (shouldBeDark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
 
-    /**
-     * FIX: Wrap setState in requestAnimationFrame.
-     * This moves the state update out of the synchronous execution flow of the effect,
-     * preventing the "cascading renders" error while ensuring the UI updates 
-     * as soon as the browser is ready.
-     */
     window.requestAnimationFrame(() => {
-      setAppState({
+      setAppState((prev) => ({
+        ...prev,
         isDarkMode: shouldBeDark,
         mounted: true,
-      });
+      }));
     });
   }, []);
 
   const toggleTheme = () => {
     const newDarkMode = !appState.isDarkMode;
-    
-    // Update state
     setAppState((prev) => ({ ...prev, isDarkMode: newDarkMode }));
-    
-    // Update DOM and LocalStorage
     if (newDarkMode) {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
@@ -53,7 +43,16 @@ export default function Home() {
     }
   };
 
-  // Prevent hydration mismatch (don't render content until we know the theme)
+  // Toggle Sidebar
+  const toggleSidebar = () => {
+    setAppState(prev => ({ ...prev, isSidebarOpen: !prev.isSidebarOpen }));
+  };
+
+  // Toggle Dropdown
+  const toggleDropdown = () => {
+    setAppState(prev => ({ ...prev, isDropdownOpen: !prev.isDropdownOpen }));
+  };
+
   if (!appState.mounted) {
     return <div className="min-h-screen bg-white dark:bg-black" />;
   }
@@ -61,23 +60,56 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-white font-sans text-black selection:bg-black selection:text-white dark:bg-black dark:text-white transition-colors duration-500">
       
-      {/* Navigation */}
+      {/* --- SIDEBAR OVERLAY --- */}
+      {appState.isSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity"
+          onClick={toggleSidebar}
+        />
+      )}
+
+      {/* --- SIDEBAR --- */}
+      <aside className={`fixed top-0 right-0 z-50 h-full w-72 bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 transform transition-transform duration-300 ease-in-out ${appState.isSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex flex-col h-full p-8">
+          <button onClick={toggleSidebar} className="self-end mb-12 text-zinc-500 hover:text-black dark:hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+
+          <nav className="flex flex-col gap-6">
+            <a href="#" className="text-sm font-bold uppercase tracking-widest">Home</a>
+            
+            {/* DROPDOWN SECTION */}
+            <div className="flex flex-col">
+              <button 
+                onClick={toggleDropdown}
+                className="flex items-center justify-between text-sm font-bold uppercase tracking-widest group"
+              >
+                Explore
+                <svg className={`transition-transform duration-200 ${appState.isDropdownOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              
+              <div className={`overflow-hidden transition-all duration-300 ${appState.isDropdownOpen ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                <ul className="flex flex-col gap-4 pl-4 border-l border-zinc-200 dark:border-zinc-800">
+                  <li><a href="#work" onClick={toggleSidebar} className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">1. My Work</a></li>
+                  <li><a href="mailto:arneljamesgdelfin5@gmail.com" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">2. Services</a></li>
+                  <li><a href="/aj_files/Delfin_ArnelJames_Resume.pdf" className="text-xs uppercase tracking-widest text-zinc-500 hover:text-black dark:hover:text-white transition-colors">3. Resume</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <a href="mailto:arneljamesgdelfin5@gmail.com" className="text-sm font-bold uppercase tracking-widest text-zinc-400">Contact</a>
+          </nav>
+        </div>
+      </aside>
+
+      {/* --- NAVIGATION --- */}
       <nav className="flex w-full max-w-6xl items-center justify-between px-6 py-10 md:px-10">
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-bold tracking-[0.2em] uppercase">
-            Arnel James G. Delfin
-          </span>
-          <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-zinc-400 dark:text-zinc-600">
-            Professional Portfolio
-          </span>
+          <span className="text-sm font-bold tracking-[0.2em] uppercase">Arnel James G. Delfin</span>
+          <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-zinc-400 dark:text-zinc-600">Professional Portfolio</span>
         </div>
         
-        <div className="flex items-center gap-8">
-          <div className="hidden md:flex gap-8 text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-            <a href="#work" className="hover:text-black dark:hover:text-white transition-colors">Projects</a>
-            <a href="mailto:arneljamesgdelfin5@gmail.com" className="hover:text-black dark:hover:text-white transition-colors">Contact</a>
-          </div>
-
+        <div className="flex items-center gap-4 md:gap-8">
           <button 
             onClick={toggleTheme}
             aria-label="Toggle Theme"
@@ -89,9 +121,19 @@ export default function Home() {
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             )}
           </button>
+
+          {/* SIDEBAR TRIGGER BUTTON */}
+          <button 
+            onClick={toggleSidebar}
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all"
+          >
+            <span className="hidden md:inline text-[10px] font-bold uppercase tracking-widest">Menu</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
         </div>
       </nav>
 
+      {/* --- MAIN CONTENT (Same as before) --- */}
       <main className="flex w-full max-w-6xl flex-col px-6 md:px-10">
         
         {/* Hero Section */}
@@ -134,12 +176,10 @@ export default function Home() {
             
             <div className="group relative overflow-hidden rounded-3xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl">
               
-              {/* PC Overlay */}
               <a href="https://blaanlanguage.com" target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-20 hidden lg:flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
                 <span className="rounded-full bg-white px-8 py-3 text-xs font-bold uppercase tracking-widest text-black">Visit Live Site</span>
               </a>
 
-              {/* MOBILE Overlay - Centered with Transparent Border */}
               <a href="https://blaanlanguage.com" target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-20 lg:hidden flex items-center justify-center bg-black/20">
                 <span className="text-white text-[10px] font-bold uppercase tracking-[0.2em] border border-white/50 px-6 py-3 rounded-full backdrop-blur-[2px]">
                   Open Live Website →
